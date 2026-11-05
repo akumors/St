@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>St.cabrio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script id="sdek-widget" type="text/javascript" src="https://cdn.jsdelivr.net/npm/@cdek-it/widget@3" charset="utf-8"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #0f172a);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f8fafc);
+            --hint-color: var(--tg-theme-hint-color, #64748b);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- Шапка бренда -->
+    <header class="sticky top-0 z-30 border-b border-gray-100/20 backdrop-blur-md bg-opacity-90 px-5 py-4 flex justify-between items-center" style="background-color: var(--bg-color);">
+        <div>
+            <h1 class="text-xl font-black tracking-widest uppercase">ST.CABRIO</h1>
+            <p class="text-[10px] tracking-wider uppercase opacity-60">Cabriolet Culture Clothing</p>
+        </div>
+        <div id="admin-badge" class="hidden bg-black text-white dark:bg-white dark:text-black text-[10px] uppercase font-bold px-2.5 py-1 rounded-full tracking-wider">
+            Admin
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ (ВКЛАДКИ) -->
+    <main class="max-w-md mx-auto px-4 pt-4">
+
+        <!-- Вкладочный контент 1: КАТАЛОГ -->
+        <section id="tab-catalog" class="tab-content">
+            <!-- Кнопка добавления товара (только для админа) -->
+            <div id="admin-add-btn-container" class="hidden mb-5">
+                <button onclick="openAdminModal()" class="w-full py-3 px-4 border border-dashed border-black/30 dark:border-white/30 rounded-2xl text-xs uppercase font-bold tracking-wider flex items-center justify-center gap-2 hover:bg-black/5 transition">
+                    + Добавить товар в каталог
+                </button>
+            </div>
+
+            <div id="products-grid" class="grid grid-cols-2 gap-3">
+                <!-- Товары рендерятся из JS -->
+            </div>
+        </section>
+
+        <!-- Вкладочный контент 2: КОРЗИНА -->
+        <section id="tab-cart" class="tab-content hidden">
+            <h2 class="text-lg font-bold uppercase tracking-wider mb-4">Корзина</h2>
+            <div id="cart-items-container" class="space-y-3 mb-24">
+                <!-- Элементы корзины -->
+            </div>
+            
+            <div id="cart-checkout-bar" class="fixed bottom-16 left-0 right-0 p-4 border-t border-gray-100/20 backdrop-blur-md hidden" style="background-color: var(--bg-color);">
+                <div class="max-w-md mx-auto flex items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs opacity-60 block">Итого к оплате:</span>
+                        <span id="cart-selected-total" class="text-xl font-bold">0 ₽</span>
+                    </div>
+                    <button onclick="openCheckoutModal()" class="bg-black text-white dark:bg-white dark:text-black px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg">
+                        Оплатить
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Вкладочный контент 3: ЗАКАЗЫ -->
+        <section id="tab-orders" class="tab-content hidden">
+            <h2 class="text-lg font-bold uppercase tracking-wider mb-4">Статус заказа</h2>
+            <div id="orders-list">
+                <!-- Динамически показываются заказы или заглушка -->
+                <div class="py-16 text-center opacity-50">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    <p class="text-sm font-medium">У вас нет текущих заказов</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (BOTTOM NAV) -->
+    <nav class="fixed bottom-0 left-0 right-0 border-t border-gray-100/20 backdrop-blur-lg z-40" style="background-color: var(--bg-color);">
+        <div class="max-w-md mx-auto flex justify-around py-2.5">
+            <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center gap-1 text-black dark:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span class="text-[10px] font-medium tracking-wider uppercase">Каталог</span>
+            </button>
+            <button onclick="switchTab('cart')" id="nav-cart" class="nav-btn flex flex-col items-center gap-1 opacity-40">
+                <div class="relative">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span id="cart-badge" class="absolute -top-1 -right-2 bg-black text-white dark:bg-white dark:text-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+                </div>
+                <span class="text-[10px] font-medium tracking-wider uppercase">Корзина</span>
+            </button>
+            <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn flex flex-col items-center gap-1 opacity-40">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <span class="text-[10px] font-medium tracking-wider uppercase">Заказы</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- МОДАЛЬНОЕ ОКНО ТОВАРА (ГАЛЕРЕЯ + РАЗМЕРЫ) -->
+    <div id="product-detail-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center p-0 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 relative" style="background-color: var(--bg-color);">
+            <button onclick="closeModal('product-detail-modal')" class="absolute top-4 right-4 z-10 bg-black/20 text-white w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+            <div id="product-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО АДМИНА (ДОБАВИТЬ / РЕДАКТИРОВАТЬ) -->
+    <div id="admin-product-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center p-0 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5" style="background-color: var(--bg-color);">
+            <h3 id="admin-modal-title" class="text-base font-bold uppercase tracking-wider mb-4">Товар</h3>
+            <form id="admin-form" onsubmit="handleAdminFormSave(event)" class="space-y-3">
+                <input type="hidden" id="admin-prod-id">
+                <input type="text" id="admin-prod-title" placeholder="Название товара" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none">
+                <input type="number" id="admin-prod-price" placeholder="Цена (₽)" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none">
+                <textarea id="admin-prod-images" placeholder="Ссылки на фото (каждая с новой строки)" rows="3" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none"></textarea>
+                <input type="text" id="admin-prod-sizes" placeholder="Размеры (через запятую: S, M, L, XL)" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none">
+                <textarea id="admin-prod-desc" placeholder="Подробное описание" rows="3" class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none"></textarea>
+                <button type="submit" class="w-full bg-black text-white dark:bg-white dark:text-black py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider">Сохранить</button>
+                <button type="button" onclick="closeModal('admin-product-modal')" class="w-full py-3 text-xs uppercase font-medium opacity-60">Отмена</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА И СДЭК -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center p-0 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5" style="background-color: var(--bg-color);">
+            <h3 class="text-base font-bold uppercase tracking-wider mb-4">Доставка и Оплата</h3>
+            <form onsubmit="confirmOrder(event)" class="space-y-4">
+                <input type="text" id="order-name" placeholder="ФИО получателя" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none">
+                <input type="tel" id="order-phone" placeholder="Номер телефона" required class="w-full border rounded-xl p-3 text-sm bg-transparent border-gray-200 outline-none">
+                
+                <div>
+                    <label class="block text-xs uppercase font-bold tracking-wider mb-2">Пункт выдачи СДЭК:</label>
+                    <button type="button" onclick="openSdekWidget()" class="w-full py-3 border border-gray-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        Выбрать ПВЗ на карте
+                    </button>
+                    <input type="hidden" id="order-pvz-val" required>
+                    <p id="selected-pvz-text" class="text-xs opacity-70 mt-2 font-medium"></p>
+                </div>
+
+                <div id="cdek-widget-container" class="hidden h-64 border rounded-xl overflow-hidden"></div>
+
+                <button type="submit" class="w-full bg-black text-white dark:bg-white dark:text-black py-4 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg">Подтвердить заказ</button>
+                <button type="button" onclick="closeModal('checkout-modal')" class="w-full py-3 text-xs uppercase font-medium opacity-60">Назад</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- СКТИПТ ЛОГИКИ -->
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Ваш Telegram ID для админ-прав
+        const ADMIN_IDS = ['5201663379'];
+        const currentUser = tg.initDataUnsafe?.user;
+        const isAdmin = currentUser && ADMIN_IDS.includes(String(currentUser.id));
+
+        if (isAdmin) {
+            document.getElementById('admin-badge').classList.remove('hidden');
+            document.getElementById('admin-add-btn-container').classList.remove('hidden');
+        }
+
+        // Стартовые товары бренда St.cabrio
+        let products = JSON.parse(localStorage.getItem('st_cabrio_products')) || [
+            {
+                id: 1,
+                title: "Cabrio Hooded Sweatshirt",
+                price: 6900,
+                images: [
+                    "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80"
+                ],
+                sizes: ["S", "M", "L", "XL"],
+                desc: "Плотный футер 480г/м². Оверсайз крой, вышитый логотип St.cabrio на груди."
+            },
+            {
+                id: 2,
+                title: "Roadster Oversized Tee",
+                price: 3400,
+                images: [
+                    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
+                ],
+                sizes: ["S", "M", "L"],
+                desc: "100% Premium Cotton. Шолкография на спине, спущенная линия плеча."
+            }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('st_cabrio_cart')) || [];
+        let myOrders = JSON.parse(localStorage.getItem('st_cabrio_orders')) || [];
+
+        function saveProducts() {
+            localStorage.setItem('st_cabrio_products', JSON.stringify(products));
+            renderProducts();
+        }
+
+        function saveCart() {
+            localStorage.setItem('st_cabrio_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        // Навигация по вкладкам
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.add('opacity-40'));
+            
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).classList.remove('opacity-40');
+
+            if (tabName === 'cart') renderCart();
+            if (tabName === 'orders') renderOrders();
+        }
+
+        // Рендер каталога
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="group relative flex flex-col justify-between border border-gray-100/10 rounded-2xl p-2 bg-gray-50/5">
+                    <div onclick="openProductDetail(${p.id})" class="cursor-pointer">
+                        <div class="aspect-[3/4] w-full rounded-xl overflow-hidden mb-2 bg-gray-100">
+                            <img src="${p.images[0]}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        </div>
+                        <h3 class="text-xs font-bold uppercase tracking-tight line-clamp-1 mb-0.5">${p.title}</h3>
+                        <p class="text-xs font-semibold opacity-80">${p.price.toLocaleString()} ₽</p>
+                    </div>
+                    ${isAdmin ? `
+                        <div class="flex gap-1 mt-2 pt-2 border-t border-gray-100/10">
+                            <button onclick="openAdminModal(${p.id})" class="flex-1 py-1 bg-black/10 text-[10px] uppercase font-bold rounded-lg">Ред.</button>
+                            <button onclick="deleteProduct(${p.id})" class="px-2 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-lg">✕</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Открытие детальной карточки товара с слайдером
+        function openProductDetail(id) {
+            const p = products.find(x => x.id === id);
+            let currentImgIdx = 0;
+
+            const modal = document.getElementById('product-detail-modal');
+            document.getElementById('product-detail-content').innerHTML = `
+                <div class="relative w-full aspect-[3/4] rounded-2xl overflow-hidden mb-4 bg-gray-100">
+                    <img id="detail-main-img" src="${p.images[0]}" class="w-full h-full object-cover">
+                    ${p.images.length > 1 ? `
+                        <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
+                            ${p.images.map((_, i) => `<div class="dot-indicator w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}" onclick="setDetailImage(${i}, '${p.images[i]}')"></div>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <h2 class="text-lg font-bold uppercase tracking-wider mb-1">${p.title}</h2>
+                <p class="text-base font-extrabold text-indigo-500 mb-3">${p.price.toLocaleString()} ₽</p>
+                <p class="text-xs opacity-70 mb-4 leading-relaxed">${p.desc}</p>
+                
+                <div class="mb-5">
+                    <label class="block text-xs uppercase font-bold tracking-wider mb-2">Размер:</label>
+                    <div class="flex gap-2">
+                        ${p.sizes.map((s, idx) => `
+                            <button onclick="selectDetailSize('${s}')" class="detail-size-btn flex-1 py-2.5 border rounded-xl text-xs font-bold uppercase transition ${idx === 0 ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black' : 'border-gray-200'}">${s}</button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button onclick="addToCart(${p.id})" class="w-full bg-black text-white dark:bg-white dark:text-black py-4 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg">Добавить в корзину</button>
+            `;
+            window.selectedSize = p.sizes[0];
+            window.currentProductImages = p.images;
+            modal.classList.remove('hidden');
+        }
+
+        function setDetailImage(idx, src) {
+            document.getElementById('detail-main-img').src = src;
+            document.querySelectorAll('.dot-indicator').forEach((dot, i) => {
+                dot.className = `dot-indicator w-2 h-2 rounded-full ${i === idx ? 'bg-white' : 'bg-white/40'}`;
+            });
+        }
+
+        function selectDetailSize(size) {
+            window.selectedSize = size;
+            document.querySelectorAll('.detail-size-btn').forEach(btn => {
+                if (btn.innerText === size) {
+                    btn.className = 'detail-size-btn flex-1 py-2.5 border rounded-xl text-xs font-bold uppercase transition border-black bg-black text-white dark:border-white dark:bg-white dark:text-black';
+                } else {
+                    btn.className = 'detail-size-btn flex-1 py-2.5 border rounded-xl text-xs font-bold uppercase transition border-gray-200';
+                }
+            });
+        }
+
+        function addToCart(id) {
+            const p = products.find(x => x.id === id);
+            const existItem = cart.find(x => x.productId === id && x.size === window.selectedSize);
+            if (existItem) {
+                existItem.qty++;
+            } else {
+                cart.push({
+                    cartId: Date.now(),
+                    productId: p.id,
+                    title: p.title,
+                    price: p.price,
+                    image: p.images[0],
+                    size: window.selectedSize,
+                    qty: 1,
+                    selected: true
+                });
+            }
+            saveCart();
+            closeModal('product-detail-modal');
+            tg.HapticFeedback?.notificationOccurred('success');
+        }
+
+        // Рендер корзины
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            const badge = document.getElementById('cart-badge');
+            
+            badge.innerText = cart.length;
+            if (cart.length > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="py-16 text-center opacity-50"><p class="text-sm font-medium">Ваша корзина пуста</p></div>`;
+                document.getElementById('cart-checkout-bar').classList.add('hidden');
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="flex items-center gap-3 p-3 border border-gray-100/10 rounded-2xl">
+                    <input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleCartSelect(${item.cartId})" class="w-4 h-4 rounded border-gray-300">
+                    <img src="${item.image}" class="w-16 h-20 object-cover rounded-xl bg-gray-100">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold uppercase truncate">${item.title}</h4>
+                        <p class="text-[11px] opacity-60">Размер: ${item.size}</p>
+                        <p class="text-xs font-bold mt-1">${item.price.toLocaleString()} ₽</p>
+                    </div>
+                    <button onclick="removeCartItem(${item.cartId})" class="text-red-500 opacity-60 p-1">✕</button>
+                </div>
+            `).join('');
+
+            updateCartTotal();
+            document.getElementById('cart-checkout-bar').classList.remove('hidden');
+        }
+
+        function toggleCartSelect(cartId) {
+            const item = cart.find(x => x.cartId === cartId);
+            if (item) item.selected = !item.selected;
+            saveCart();
+        }
+
+        function removeCartItem(cartId) {
+            cart = cart.filter(x => x.cartId !== cartId);
+            saveCart();
+        }
+
+        function updateCartTotal() {
+            const total = cart.filter(x => x.selected).reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cart-selected-total').innerText = `${total.toLocaleString()} ₽`;
+        }
+
+        // Оформление заказа
+        function openCheckoutModal() {
+            const selectedItems = cart.filter(x => x.selected);
+            if (selectedItems.length === 0) {
+                alert('Выберите хотя бы один товар для оплаты');
+                return;
+            }
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function openSdekWidget() {
+            const container = document.getElementById('cdek-widget-container');
+            container.classList.remove('hidden');
+            new CDEKWidget({
+                from: 'Москва',
+                root: 'cdek-widget-container',
+                apiKey: 'YOUR_CDEK_API_KEY',
+                goods: [{ length: 10, width: 10, height: 10, weight: 500 }],
+                onChoose: (choosed) => {
+                    const text = `${choosed.cityName}, ${choosed.address}`;
+                    document.getElementById('order-pvz-val').value = text;
+                    document.getElementById('selected-pvz-text').innerText = `ПВЗ: ${text}`;
+                    container.classList.add('hidden');
+                }
+            });
+        }
+
+        function confirmOrder(e) {
+            e.preventDefault();
+            const name = document.getElementById('order-name').value;
+            const phone = document.getElementById('order-phone').value;
+            const pvz = document.getElementById('order-pvz-val').value || 'Не выбран';
+
+            const selectedItems = cart.filter(x => x.selected);
+            const total = selectedItems.reduce((sum, item) => sum + item.price, 0);
+
+            const newOrder = {
+                id: Math.floor(1000 + Math.random() * 9000),
+                date: new Date().toLocaleDateString('ru-RU'),
+                items: selectedItems,
+                total: total,
+                status: 'Ожидает оплаты'
+            };
+
+            myOrders.unshift(newOrder);
+            localStorage.setItem('st_cabrio_orders', JSON.stringify(myOrders));
+
+            // Удаляем купленное из корзины
+            cart = cart.filter(x => !x.selected);
+            saveCart();
+
+            closeModal('checkout-modal');
+            switchTab('orders');
+
+            alert(`Заказ #${newOrder.id} успешно создан!\nНаш менеджер свяжется с вами по номеру ${phone} для подтверждения и оплаты.`);
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-list');
+            if (myOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="py-16 text-center opacity-50">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        <p class="text-sm font-medium">У вас нет текущих заказов</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = myOrders.map(o => `
+                <div class="p-4 border border-gray-100/10 rounded-2xl mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold uppercase">Заказ #${o.id}</span>
+                        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">${o.status}</span>
+                    </div>
+                    <p class="text-xs opacity-60 mb-2">${o.date} • ${o.items.length} товара</p>
+                    <p class="text-sm font-bold">${o.total.toLocaleString()} ₽</p>
+                </div>
+            `).join('');
+        }
+
+        // Функции Админа
+        function openAdminModal(editId = null) {
+            const modal = document.getElementById('admin-product-modal');
+            if (editId) {
+                const p = products.find(x => x.id === editId);
+                document.getElementById('admin-modal-title').innerText = 'Редактировать товар';
+                document.getElementById('admin-prod-id').value = p.id;
+                document.getElementById('admin-prod-title').value = p.title;
+                document.getElementById('admin-prod-price').value = p.price;
+                document.getElementById('admin-prod-images').value = p.images.join('\n');
+                document.getElementById('admin-prod-sizes').value = p.sizes.join(', ');
+                document.getElementById('admin-prod-desc').value = p.desc;
+            } else {
+                document.getElementById('admin-modal-title').innerText = 'Новый товар';
+                document.getElementById('admin-form').reset();
+                document.getElementById('admin-prod-id').value = '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function handleAdminFormSave(e) {
+            e.preventDefault();
+            const id = document.getElementById('admin-prod-id').value;
+            const title = document.getElementById('admin-prod-title').value;
+            const price = Number(document.getElementById('admin-prod-price').value);
+            const images = document.getElementById('admin-prod-images').value.split('\n').map(s => s.trim()).filter(Boolean);
+            const sizes = document.getElementById('admin-prod-sizes').value.split(',').map(s => s.trim()).filter(Boolean);
+            const desc = document.getElementById('admin-prod-desc').value;
+
+            if (id) {
+                const p = products.find(x => x.id == id);
+                p.title = title; p.price = price; p.images = images; p.sizes = sizes; p.desc = desc;
+            } else {
+                products.push({ id: Date.now(), title, price, images, sizes, desc });
+            }
+
+            saveProducts();
+            closeModal('admin-product-modal');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Удалить этот товар из каталога?')) {
+                products = products.filter(x => x.id !== id);
+                saveProducts();
+            }
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Инициализация
+        renderProducts();
+    </script>
+</body>
+</html>
